@@ -14,21 +14,34 @@ library(plotly)
 
 
 ```{r}
-data <- read_excel(path = "CO2Data1.xlsx", sheet = "CO2 Data Set 1")
+data <- read_excel(path = "HiMCMData.xlsx", sheet = "CO2 Data Set 1")
+
+df <- data.frame(Year = data $ Year,
+                 CO2 = c(data $ `10 Year Average`, data $ `Annual Increase`),
+                 Graphs = c(rep("10 Year Average(PPM)", nrow(data)),
+                           rep("Annual Increase(PPM)", nrow(data)))) |> 
+  drop_na() 
+df
+
+highlight <- df |> 
+  filter(Year == 2004 & Graphs == "Annual Increase(PPM)")
+highlight
 ```
 
-```{r}
-plot_ly(data, x = ~Year, y = ~PPM) |> 
-  layout(title = "CO2 levels from 1959 to 2022 Graph 1", yaxis = list(title = 'Carbon Dioxide in Parts Per Million(PPM)'))
-```
-
 
 ```{r}
-data |> 
-  ggplot(aes(x = Year, y = PPM)) +
+
+ggplot(df, aes(x = Year, y = CO2, col = Graphs)) +
+  geom_line() +
   geom_point() +
+  geom_point(data = highlight,
+             aes(x = Year, y = CO2),
+             color = 'black',
+             size = 3)
   labs(title = "CO2 Levels in the US from 1959 to 2021", 
-       y = "Carbon Dioxide in Parts Per Million (PPM)",
-       caption = "HiMCM Data")
+      yaxis = "Carbon Dioxide in Parts Per Million (PPM)",
+      caption = "HiMCM Data")
+
+
 ```
 

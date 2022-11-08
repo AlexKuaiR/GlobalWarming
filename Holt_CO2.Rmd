@@ -1,0 +1,33 @@
+---
+title: "Holt's Method CO2"
+author: "Alex Kuai"
+date: "2022-11-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(forecast)
+library(readxl)
+```
+
+
+```{r}
+data <- read_excel("HiMCMData.xlsx") |> 
+  select(Year, PPM)
+
+data
+
+fit <- holt(data $ PPM, h = 80) 
+fit2 <- holt(data $ PPM, damped = TRUE, phi = 0.98, h = 80)
+
+autoplot(fit) +
+  autolayer(fit, series = "Holt's method", PI = FALSE) +
+  autolayer(fit2, series = "Damped Holt's Method", PI = FALSE) +
+  labs(title = "Forecasts For Future CO2 Levels from Holt's Method",
+       x = "Years past 1959",
+       y = "CO2 Levels")
+```
+
+

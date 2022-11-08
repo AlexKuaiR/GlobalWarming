@@ -1,0 +1,60 @@
+---
+title: "CO2 Weighted Moving Average Model"
+author: "Alex Kuai"
+date: "2022-11-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(feasts)
+library(tsibble)
+library(forecast)
+```
+
+```{r}
+# to forecast, we must take the average of the given data points to calculate the WMA one row past the last data point, then we will calculate the rest with the most amount of given data points as we can, and fill in the missing ones with previously calculated WMA
+
+d <- read_excel("HiMCMData.xlsx", sheet = "CO2 Data Set 1") |> 
+  select(Lag, `Annual Increase`) |> 
+  drop_na()
+
+d |> as_tsibble(index = Lag) -> ts
+ts
+ts |> 
+  ACF(`Annual Increase`, lag_max = 60) |> 
+  autoplot() + 
+  labs(title = "CO2 Growth ACF",
+       x = "Lag",
+       y = "Correlation Coefficient")
+
+
+ts |> 
+  gg_tsdisplay(difference(`Annual Increase`), plot_type = 'partial')
+
+# best pdq(2, 1, 1)
+```
+
+```{r}
+data <- read_excel("HiMCMData.xlsx") |> 
+  select(Year, `Annual Increase`) |> 
+  drop_na()
+
+data |>  as_tsibble(index = Year) -> tsibbleData
+#tsibbleData
+#auto.arima(tsibbleData)
+
+# best ARIMA pdq(2, 1, 1)
+
+
+fit <- Arima(tsibbleData $ `Annual Increase`, order = c(2, 1, 1))
+fit
+fit |> 
+  forecast(h = 79) |> 
+  autoplot() +
+  labs(y = "Forecasted Annual CO2 Increase",
+       captions = "HiMCM Data")
+```
+
+

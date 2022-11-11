@@ -1,0 +1,56 @@
+---
+title: "ARIMA"
+author: "Alex Kuai"
+date: "2022-11-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(readxl)
+library(fpp3)
+library(fable)
+library(feasts)
+```
+
+```{r}
+data <- read_excel("HiMCMData.xlsx", sheet = "CO2 Data Set 1") |> 
+  select(Year, PPM) |> 
+  drop_na()
+
+ts <- data |> as_tsibble(index = Year)
+#ts |> 
+#  gg_tsdisplay(difference(PPM), plot_type = 'partial', lag = 61)
+
+ts |> 
+  gg_tsdisplay(difference(PPM) |> difference(), plot_type = 'partial', lag = 61) +
+  labs(title = "Double Differenced", y = "")
+```
+
+```{r}
+fit <- ts |> 
+  model(
+    #arima = ARIMA(PPM ~ pdq(0, 1, 2) + PDQ(0, 1, 1)),
+    auto = ARIMA(PPM, stepwise = FALSE, approx = FALSE)
+  )
+
+fit $ auto
+fit |> pivot_longer(everything(), names_to = "Model name",
+                    values_to = "Orders")
+
+
+glance(fit) |> 
+  arrange(AICc) |> 
+  select(.model:BIC)
+
+augment(fit) |> 
+  filter(.model == "auto") |> 
+  features(.innov, ljung_box, lag = 61, dof = 1)
+
+forecast(fit, h = 79) |> 
+  filter(.model == "auto") |> 
+  autoplot(ts)
+
+```
+

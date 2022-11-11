@@ -10,24 +10,45 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(forecast)
 library(readxl)
+library(fpp3)
+library(tsibble)
+#library(psych)
 ```
 
 
 ```{r}
 data <- read_excel("HiMCMData.xlsx") |> 
-  select(Year, PPM)
+  select(Year, PPM) |> 
+  drop_na()
 
-data
+data |> as_tsibble(index = Year) -> ts
+#phi(as_tibble.matrix(data $ PPM), digits = 3)
+fc <- ts |> 
+  model(
+    `Holt's Method` = ETS(PPM ~ error("A") + trend("A") + season("N")),
+    `Damped Holt's Method` = ETS(PPM ~ error("A") + trend("Ad") + season("N"))
+  ) |> 
+  forecast(h = 79)
+#tidy(fc)
+fc
 
-fit <- holt(data $ PPM, h = 80) 
-fit2 <- holt(data $ PPM, damped = TRUE, phi = 0.98, h = 80)
+fc |> 
+  autoplot(ts, level = NULL) +
+  labs(title = "Holt's Method CO2 Forecast", y = "CO2 Levels") +
+  guides(colour = guide_legend(title = "Forecast"))
 
-autoplot(fit) +
-  autolayer(fit, series = "Holt's method", PI = FALSE) +
-  autolayer(fit2, series = "Damped Holt's Method", PI = FALSE) +
-  labs(title = "Forecasts For Future CO2 Levels from Holt's Method",
-       x = "Years past 1959",
-       y = "CO2 Levels")
+  
+  
+  
+#fit <- holt(data $ PPM, h = 80) 
+#fit2 <- holt(data $ PPM, damped = TRUE, phi = 0.98, h = 80)
+
+#autoplot(fit) +
+#  autolayer(fit, series = "Holt's method", PI = FALSE) +
+#  autolayer(fit2, series = "Damped Holt's Method", PI = FALSE) +
+#  labs(title = "Forecasts For Future CO2 Levels from Holt's Method",
+#       x = "Years past 1959",
+#       y = "CO2 Levels")
 ```
 
 

@@ -25,7 +25,10 @@ df
 
 highlight <- df |> 
   filter(Year == 2004 & Graphs == "Annual Increase(PPM)")
-highlight
+
+highlight2 <- data |> 
+  filter(Year == 2004)
+highlight2
 ```
 
 
@@ -43,5 +46,19 @@ ggplot(df, aes(x = Year, y = CO2, col = Graphs)) +
       caption = "HiMCM Data")
 
 
+```
+```{r}
+data |> 
+  select(Year, `Annual Increase`, `10 Year Average`) |> 
+  drop_na() |> 
+  ggplot(aes(x = `Annual Increase`, y = `10 Year Average` * 10)) +
+  geom_point() +
+  geom_point(data = highlight2,
+             aes(x = `Annual Increase`, y = `10 Year Average` * 10),
+             color = 'blue',
+             size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(y = "10 Year Increase")
+  
 ```
 
